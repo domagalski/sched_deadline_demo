@@ -89,20 +89,25 @@ void *run_deadline(void *data)
 // generate timing data for SCHED_DEADLINE
 int time_deadline(long long int *latency, long long int *delays, int n_lat, uint64_t period){
     int idx;
-    struct timeval time1, time2;
+    // struct timeval time1, time2;
+    struct timespec time1, time2;
     long long int t1, t2, prev_delay = 0;
 
     // initial time. since the first time call in the loop is immediately after
     // the first time call, it's not useful data and must be discarded.
-    gettimeofday(&time1, NULL);
-    t1 = time1.tv_sec * 1000000 + time1.tv_usec;
+    //gettimeofday(&time1, NULL);
+    clock_gettime(CLOCK_MONOTONIC_RAW, &time1);
+    //t1 = time1.tv_sec * 1000000 + time1.tv_usec;
+    t1 = time1.tv_sec * 1000000000L + time1.tv_nsec;
 
     // measure time delay between each iteration of the loop.
     for (idx = 0; idx<n_lat; idx++) {
-        gettimeofday(&time2, NULL);
-        t2 = time2.tv_sec * 1000000 + time2.tv_usec;
+        //gettimeofday(&time2, NULL);
+        clock_gettime(CLOCK_MONOTONIC_RAW, &time2);
+        t2 = time2.tv_sec * 1000000000L + time2.tv_nsec;
         latency[idx] = t2 - t1;
-        delays[idx] = latency[idx] - period/1000;
+        delays[idx] = latency[idx] - period;
+        //delays[idx] = latency[idx] - period/1000;
         t1 = t2;
 
         // pause computation until the next SCHED_DEADLINE period.
